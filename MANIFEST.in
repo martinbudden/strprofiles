@@ -1,0 +1,3 @@
+include Makefile README CHANGES
+recursive-include data *
+recursive-include test *
