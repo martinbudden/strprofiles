@@ -87,7 +87,32 @@ def textTable(data,caption,rowheaders,colheaders):
 		'{% for top in tops %}'
 			'{{"%1.2e"|format(data[top]["reciprocal"])|escape}} '
 		'{% endfor %}')
-	return t.render(data=data, caption=caption, tops=colheaders, lefts=rowheaders)
+	return t.render(data=data, caption=caption, lefts=rowheaders, tops=colheaders)
+
+
+def textTable2(data,caption,rowheaders,colheaders):
+	"""
+	Format data into a text table formatted using whitespace
+
+	Keyword arguments:
+	data -- a 2D dict of the data to be formatted
+	caption -- the table's caption
+	rowheaders -- the table's row headings
+	colheaders -- the table's column headings
+
+	"""
+	t = Template('\n{{caption}}\n'
+		'{{"%8s"|format("")}} '
+		'{% for top in tops %}'
+			'{{"%8s"|format(top)}} '
+		'{% endfor %}\n'
+		'{% for left in lefts %}'
+			'{{"%8s"|format(left)}} '
+			'{% for top in tops %}'
+				'{{"%1.2e"|format(data[top][left])|escape}} '
+			'{% endfor %}\n'
+		'{% endfor %}')
+	return t.render(data=data, caption=caption, lefts=rowheaders, tops=colheaders)
 
 
 def htmlTable(data,caption,rowheaders,colheaders):
@@ -142,7 +167,41 @@ def htmlTable(data,caption,rowheaders,colheaders):
 		'<tfoot>\n'
 		'</tfoot>\n'
 		'</table>\n</html>\n')
-	return t.render(data=data, caption=caption, tops=colheaders, lefts=rowheaders)
+	return t.render(data=data, caption=caption, lefts=rowheaders, tops=colheaders)
+
+def htmlTable2(data,caption,rowheaders,colheaders):
+	"""
+	Format data into an HTML table
+
+	Keyword arguments:
+	data -- a 2D dict of the data to be formatted
+	caption -- the table's caption
+	rowheaders -- the table's row headings
+	colheaders -- the table's column headings
+
+	"""
+	t = Template('<html>\n<table>\n'
+		'<caption>{{caption}}</caption>\n'
+		'<thead>\n'
+		'<tr> '
+		'<th></th> '
+		'{% for top in tops %}'
+			'<th>{{top|replace(" ", "<br />")}}</th> '
+		'{% endfor %}'
+		'</tr>\n'
+		'</thead>\n'
+		'<tbody>\n'
+		'{% for left in lefts %}'
+			'<tr> '
+			'<th>{{left}}</th> '
+			'{% for top in tops %}'
+				'<td>{{"%1.2e"|format(data[top][left])|escape}}</td> '
+			'{% endfor %}'
+			'</tr>\n'
+		'{% endfor %}'
+		'</tbody>\n'
+		'</table>\n</html>\n')
+	return t.render(data=data, caption=caption, lefts=rowheaders, tops=colheaders)
 
 def calculate_marker_rmp(alleles,theta):
 	"""
@@ -194,7 +253,7 @@ def pool_alleles(alleles,cutoff,count):
 	return ret
 
 
-def calc3(d,cols,name,newname,cutoff,theta):
+def calc3(d,cols,name,cutoff,theta):
 	rmp = 1.0
 	col = {}
 	for c in cols:
@@ -207,45 +266,36 @@ def calc3(d,cols,name,newname,cutoff,theta):
 			p = calculate_marker_rmp(alleles,theta)
 			rmp *= p
 			#print c['name'],c['marker'],round(p,4)
-			d[newname][c['marker']] = p
-	d[newname]['count'] = count
-	d[newname]['combined'] = rmp
-	d[newname]['reciprocal'] = 1.0/rmp
+			d[name][c['marker']] = p
+	d[name]['count'] = count
+	d[name]['combined'] = rmp
+	d[name]['reciprocal'] = 1.0/rmp
 	return d
 
-def calc4(datasets,caption,cutoff,theta):
+def calc4(cols,samples,caption,cutoff,theta):
 	d = defaultdict(dict)
 	columnHeaders = []
-	for dataset in datasets:
-		cols = dataset['cols']
-		for sample in dataset['samples']:
-			header = dataset['abbr'] + ' ' + sample
-			columnHeaders.append(header)
-			calc3(d,cols,sample,header,cutoff,theta)
+	for sample in samples:
+		columnHeaders.append(sample)
+		calc3(d,cols,sample,cutoff,theta)
 	#"302 Cau","258 AA","140 His",
 	#tops = ['AB AA','AB Cau','AB Combined','JSP AA','JSP Cau','JSP His','JSP Combined']
 	#columnHeaders = ['AB AA','AB Cau','JSF AA','JSF Cau','JSF His']
-	print textTable(d,caption,SGM_PLUS_MARKERS,columnHeaders)
-	#print htmlTable(d,caption,SGM_PLUS_MARKERS,columnHeaders)
+	#print textTable(d,caption,SGM_PLUS_MARKERS,columnHeaders)
+	print htmlTable(d,caption,SGM_PLUS_MARKERS,columnHeaders)
 
 
-def calc5(datasets):
+def calc5(cols,samples,caption):
 	d = defaultdict(dict)
 	columnHeaders = []
-	for dataset in datasets:
-		cols = dataset['cols']
-		for sample in dataset['samples']:
-			header = dataset['abbr'] + ' ' + sample
-			columnHeaders.append(header)
-			calc3(d,cols,sample,header,cutoff,theta)
-		 	profile = get_modal_profile(cols,sample)
-	#print "Cau",profile
-	print 'pmp 0.0',"%1.2e" % (1.0/calc_profile_match_probability(profile,0.0))
-	print 'pmp 0.01',"%1.2e" % (1.0/calc_profile_match_probability(profile,0.01))
-	print 'pmp 0.03',"%1.2e" % (1.0/calc_profile_match_probability(profile,0.03))
-	print
-	profile = get_modal_profile(colsAB,'AA')
-	#print "AA",profile
+	for sample in samples:
+		columnHeaders.append(sample)
+		profile = get_modal_profile(cols,sample)
+		d[sample]['0.0'] = 1.0/calc_profile_match_probability(profile,0.0)
+		d[sample]['0.01'] = 1.0/calc_profile_match_probability(profile,0.01)
+		d[sample]['0.03'] = 1.0/calc_profile_match_probability(profile,0.03)
+	print textTable2(d,caption,['0.0','0.01','0.03'],columnHeaders)
+	print htmlTable2(d,caption,['0.0','0.01','0.03'],columnHeaders)
 
 
 def get_modal_profile(cols,name):
@@ -280,24 +330,20 @@ def calc_profile_match_probability(profile,theta):
 	return pmp
 
 def main():
-	dataset = []
+	# read in the NIST/JSF allele frequency data
+	colsJFS = read_csv("../data/JFS2003IDresults.csv","JSF ",1)
 
 	# read in the NIST/JSF allele frequency data
-	colsJFS = read_csv("../data/JFS2003IDresults.csv","",1)
-	dataset.append({'cols':colsJFS,'abbr':'JFS','samples':['AA','Cau','His']})
+	colsAB = read_csv("../data/ABresults.csv","AB ",100)
+	cols = colsJFS + colsAB
 
-	# read in the NIST/JSF allele frequency data
-	colsAB = read_csv("../data/ABresults.csv","",100)
-	dataset.append({'cols':colsAB,'abbr':'AB','samples':['AA','Cau']})
+	samples = ['JSF AA','JSF Cau','JSF His','AB AA','AB Cau']
 
-	calc4(dataset,"Raw Probability of Identity values",0,0.0)
-	calc4(dataset,"Rare alleles pooled",5,0.0)
-	calc4(dataset,"Theta = 0.01",5,0.01)
-	calc4(dataset,"Theta = 0.03",5,0.03)
-
-	#calc5(dataset)
-	#calc3(cols,'AA')
-	#calc3(cols,'Cau',5.0/195.0,theta)
+	calc4(cols,samples,"Raw Probability of Identity values",0,0.0)
+	calc4(cols,samples,"Rare alleles pooled",5,0.0)
+	calc4(cols,samples,"Theta = 0.01",5,0.01)
+	calc4(cols,samples,"Theta = 0.03",5,0.03)
+	calc5(cols,samples,"Modal Man")
 
 if __name__ == "__main__":
     main()
