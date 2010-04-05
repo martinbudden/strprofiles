@@ -1,3 +1,8 @@
-0.1 Wed Mar  10 13:00:00 BST 2010
+0.1 Wed Mar 10 13:00:00 BST 2010
 
     * Initial commit
+
+0.2 Mon Apr 5 10:30:00 BST 2010
+
+    * Consideral work on SGM module
+    * Updated ABresults.csv to conform to JSF2003IDresults.csv format
