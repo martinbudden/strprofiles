@@ -213,7 +213,7 @@ def htmlTable2(data,caption,rowheaders,colheaders):
 	return t.render(data=data, caption=caption, lefts=rowheaders, tops=colheaders)
 
 
-def calc4(cols,samples,format,caption,cutoff,theta):
+def calc_rmps(cols,samples,format,caption,cutoff,theta):
 	d = defaultdict(dict)
 	columnHeaders = []
 	for sample in samples:
@@ -228,7 +228,7 @@ def calc4(cols,samples,format,caption,cutoff,theta):
 		return textTable(d,caption,strmarker.SGM_PLUS_MARKERS,columnHeaders)
 
 
-def calc5(cols,samples,format,caption):
+def calc_pmps(cols,samples,format,caption):
 	d = defaultdict(dict)
 	columnHeaders = []
 	for sample in samples:
@@ -262,11 +262,11 @@ def main():
 
 	samples = ['JSF AA','JSF Cau','JSF His','AB AA','AB Cau']
 
-	print calc4(cols,samples,format,"Raw Probability of Identity values",0,0.0)
-	print calc4(cols,samples,format,"Rare alleles pooled",5,0.0)
-	print calc4(cols,samples,format,"Theta = 0.01",5,0.01)
-	print calc4(cols,samples,format,"Theta = 0.03",5,0.03)
-	print calc5(cols,samples,format,"Modal Man")
+	print calc_rmps(cols,samples,format,"Raw Probability of Identity values",0,0.0)
+	print calc_rmps(cols,samples,format,"Rare alleles pooled",5,0.0)
+	print calc_rmps(cols,samples,format,"Theta = 0.01",5,0.01)
+	print calc_rmps(cols,samples,format,"Theta = 0.03",5,0.03)
+	print calc_pmps(cols,samples,format,"Modal Man")
 
 if __name__ == "__main__":
 	main()
