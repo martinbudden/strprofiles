@@ -26,19 +26,19 @@ class exampleTestCase(unittest.TestCase):
 	# AB Cau FGA frequencies (n=200)
 	alleles = self.AB_Cau_FGA_alleles
 	expected = 0.036
-	result = strmarker.calculate_marker_rmp(alleles,0.0)
+	result = strmarker.calc_marker_rmp(alleles,0.0)
         self.assertAlmostEqual(result,expected,3)
 
 	# AB Cau TH01 frequencies (n=200)
 	alleles = self.AB_Cau_TH01_alleles
 	expected = 0.094
-	result = strmarker.calculate_marker_rmp(alleles,0.0)
+	result = strmarker.calc_marker_rmp(alleles,0.0)
         self.assertAlmostEqual(result,expected,3)
 
 	# AB Cau D16S539 frequencies (n=200)
 	alleles = self.AB_Cau_D16S539_alleles
 	expected = 0.103
-	result = strmarker.calculate_marker_rmp(alleles,0.0)
+	result = strmarker.calc_marker_rmp(alleles,0.0)
         self.assertAlmostEqual(result,expected,3)
 
 
@@ -47,6 +47,22 @@ class exampleTestCase(unittest.TestCase):
             alleles[i] /= 100.0
         return alleles
 
+
+    def testGetModalProfile(self):
+        """get modal profile"""
+	cols = [{'name':'AB','marker':'FGA','alleles':self.AB_Cau_FGA_alleles},{'name':'AB','marker':'TH01','alleles':self.AB_Cau_TH01_alleles}, \
+		{'name':'AB','marker':'DS16S539','alleles':self.AB_Cau_D16S539_alleles}]
+	expected = {'FGA':(('21',0.1775),('22',0.165)), 'TH01':(('9.3',0.35),('6',0.2525)),' DS16S539':(('12',0.3425),('11',0.2975))}
+	profile = expected
+	result = strmarker.get_modal_profile(cols,'AB')
+	for i in result:
+		self.assertEqual(result[i][0][0],expected[i][0][0])
+		self.assertEqual(result[i][1][0],expected[i][1][0])
+		self.assertAlmostEqual(result[i][0][1],expected[i][0][1])
+		self.assertAlmostEqual(result[i][1][1],expected[i][1][1])
+	expected = 0.01035313125
+	result = strmarker.calc_profile_match_probability(result,0.0)
+	self.assertEqual(result,expected)
 
     def testPoolAlleles(self):
         """pool alleles"""

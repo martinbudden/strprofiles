@@ -33,6 +33,7 @@ def read_csv(filename,prefix,normalizer):
 	"Allele","302 Cau","258 AA","140 His","302 Cau","258 AA","140 His",...
 	7,,0.05253,0.02143,,,,...
 	"""
+
 	cols = []
 
 	reader = csv.reader(open(filename, "rb"),'excel')
@@ -217,7 +218,7 @@ def calc4(cols,samples,format,caption,cutoff,theta):
 	columnHeaders = []
 	for sample in samples:
 		columnHeaders.append(sample)
-		strmarker.calc3(d,cols,sample,cutoff,theta)
+		d[sample] = strmarker.calc_rmps(cols,sample,cutoff,theta)
 	#"302 Cau","258 AA","140 His",
 	#tops = ['AB AA','AB Cau','AB Combined','JSP AA','JSP Cau','JSP His','JSP Combined']
 	#columnHeaders = ['AB AA','AB Cau','JSF AA','JSF Cau','JSF His']

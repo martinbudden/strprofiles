@@ -8,7 +8,7 @@ from operator import itemgetter
 SGM_PLUS_MARKERS = ['FGA','TH01','VWA','D2S1338','D3S1358','D8S1179','D16S539','D18S51','D19S433','D21S11']
 #SGM_PLUS_MARKERS = ['TH01','D16S539']
 
-def calculate_marker_rmp(alleles,theta):
+def calc_marker_rmp(alleles,theta):
 	"""
 	Calculate the random match probability for at a genetic marker, given the allele frequencies
 	for that marker. The Balding and Nichols formulae are used.
@@ -59,7 +59,8 @@ def pool_alleles(alleles,cutoff,count):
 	return ret
 
 
-def calc3(d,cols,name,cutoff,theta):
+def calc_rmps(cols,name,cutoff,theta):
+	ret = {}
 	rmp = 1.0
 	col = {}
 	for c in cols:
@@ -69,14 +70,14 @@ def calc3(d,cols,name,cutoff,theta):
 			count = c['count']
 			# note, count doubled since two allele values per person in sample
 			alleles = pool_alleles(c['alleles'],cutoff,2*count)
-			p = calculate_marker_rmp(alleles,theta)
+			p = calc_marker_rmp(alleles,theta)
 			rmp *= p
 			#print c['name'],c['marker'],round(p,4)
-			d[name][c['marker']] = p
-	d[name]['count'] = count
-	d[name]['combined'] = rmp
-	d[name]['reciprocal'] = 1.0/rmp
-	return d
+			ret[c['marker']] = p
+	ret['count'] = count
+	ret['combined'] = rmp
+	ret['reciprocal'] = 1.0/rmp
+	return ret
 
 
 def get_modal_profile(cols,name):
