@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+#coding=utf-8
+#file: sgm.py
+
 """
 sgm
 """
@@ -8,21 +12,27 @@ import string
 from operator import itemgetter
 from jinja2 import Template
 from collections import defaultdict
+from optparse import OptionParser
+
 
 SGM_PLUS_MARKERS = ['FGA','TH01','VWA','D2S1338','D3S1358','D8S1179','D16S539','D18S51','D19S433','D21S11']
 #SGM_PLUS_MARKERS = ['TH01','D16S539']
 
 def read_csv(filename,prefix,normalizer):
 	"""
-	Format data into a text table formatted using whitespace
+	Read genetic marker allele frequency data from a .csv file
 
 	Keyword arguments:
 	filename -- the file to be read
 	normalizer -- used to normalize the data, use 100 if the data are percentages, 1 if they are
 	fractions in the range [0.0,1.0]
 
-	"""
-	"""
+	Format of file is:
+	First row - each cell is a SGM Marker name, cell A1 blank
+	Second row - each cell is sample size and sample name (eg "302 Cau"), cell B1 ignored
+	First column - (starting at C1) allele value (eg "11"), cell A1 blank, cell B1 is column header "Allele"
+	Main table - from C2 - allele frequency value for given Marker, Sample and allele
+
 	,"CSF1PO","CSF1PO","CSF1PO","FGA","FGA","FGA",...
 	"Allele","302 Cau","258 AA","140 His","302 Cau","258 AA","140 His",...
 	7,,0.05253,0.02143,,,,...
@@ -52,6 +62,7 @@ def read_csv(filename,prefix,normalizer):
 	except StopIteration:
 		pass
 	return cols
+
 
 def textTable(data,caption,rowheaders,colheaders):
 	"""
@@ -169,6 +180,7 @@ def htmlTable(data,caption,rowheaders,colheaders):
 		'</table>\n</html>\n')
 	return t.render(data=data, caption=caption, lefts=rowheaders, tops=colheaders)
 
+
 def htmlTable2(data,caption,rowheaders,colheaders):
 	"""
 	Format data into an HTML table
@@ -203,6 +215,7 @@ def htmlTable2(data,caption,rowheaders,colheaders):
 		'</table>\n</html>\n')
 	return t.render(data=data, caption=caption, lefts=rowheaders, tops=colheaders)
 
+
 def calculate_marker_rmp(alleles,theta):
 	"""
 	Calculate the random match probability for at a genetic marker, given the allele frequencies
@@ -224,6 +237,7 @@ def calculate_marker_rmp(alleles,theta):
 				p = (theta+(1-theta)*alleles[i])*(theta+(1-theta)*alleles[j])/denom
 				rmp += 2*p*p
 	return rmp
+
 
 def pool_alleles(alleles,cutoff,count):
 	"""
@@ -272,7 +286,8 @@ def calc3(d,cols,name,cutoff,theta):
 	d[name]['reciprocal'] = 1.0/rmp
 	return d
 
-def calc4(cols,samples,caption,cutoff,theta):
+
+def calc4(cols,samples,format,caption,cutoff,theta):
 	d = defaultdict(dict)
 	columnHeaders = []
 	for sample in samples:
@@ -281,11 +296,13 @@ def calc4(cols,samples,caption,cutoff,theta):
 	#"302 Cau","258 AA","140 His",
 	#tops = ['AB AA','AB Cau','AB Combined','JSP AA','JSP Cau','JSP His','JSP Combined']
 	#columnHeaders = ['AB AA','AB Cau','JSF AA','JSF Cau','JSF His']
-	#print textTable(d,caption,SGM_PLUS_MARKERS,columnHeaders)
-	print htmlTable(d,caption,SGM_PLUS_MARKERS,columnHeaders)
+	if format == "html":
+		return htmlTable(d,caption,SGM_PLUS_MARKERS,columnHeaders)
+	else:
+		return textTable(d,caption,SGM_PLUS_MARKERS,columnHeaders)
 
 
-def calc5(cols,samples,caption):
+def calc5(cols,samples,format,caption):
 	d = defaultdict(dict)
 	columnHeaders = []
 	for sample in samples:
@@ -294,8 +311,10 @@ def calc5(cols,samples,caption):
 		d[sample]['0.0'] = 1.0/calc_profile_match_probability(profile,0.0)
 		d[sample]['0.01'] = 1.0/calc_profile_match_probability(profile,0.01)
 		d[sample]['0.03'] = 1.0/calc_profile_match_probability(profile,0.03)
-	print textTable2(d,caption,['0.0','0.01','0.03'],columnHeaders)
-	print htmlTable2(d,caption,['0.0','0.01','0.03'],columnHeaders)
+	if format == "html":
+		return htmlTable2(d,caption,['0.0','0.01','0.03'],columnHeaders)
+	else:
+		return textTable2(d,caption,['0.0','0.01','0.03'],columnHeaders)
 
 
 def get_modal_profile(cols,name):
@@ -313,6 +332,7 @@ def get_modal_profile(cols,name):
 				profile[c['marker']]  = ((items[0][0],p),(items[1][0],q))
 	return profile
 
+
 def calc_profile_match_probability(profile,theta):
 	pmp = 1.0
 	for marker in profile:
@@ -329,7 +349,17 @@ def calc_profile_match_probability(profile,theta):
 		pmp *= mp
 	return pmp
 
+
 def main():
+	parser = OptionParser()
+	parser.add_option("-t", action="store_true", dest="text_format", default=False, help="use text format tables")
+ 	parser.add_option("-v", action="store_true", dest="verbose", default=False, help="print status messages to stdout")
+	(options,args) = parser.parse_args()
+	if options.text_format:
+		format = "text"
+	else:
+		format = "html"
+
 	# read in the NIST/JSF allele frequency data
 	colsJFS = read_csv("../data/JFS2003IDresults.csv","JSF ",1)
 
@@ -339,11 +369,11 @@ def main():
 
 	samples = ['JSF AA','JSF Cau','JSF His','AB AA','AB Cau']
 
-	calc4(cols,samples,"Raw Probability of Identity values",0,0.0)
-	calc4(cols,samples,"Rare alleles pooled",5,0.0)
-	calc4(cols,samples,"Theta = 0.01",5,0.01)
-	calc4(cols,samples,"Theta = 0.03",5,0.03)
-	calc5(cols,samples,"Modal Man")
+	print calc4(cols,samples,format,"Raw Probability of Identity values",0,0.0)
+	print calc4(cols,samples,format,"Rare alleles pooled",5,0.0)
+	print calc4(cols,samples,format,"Theta = 0.01",5,0.01)
+	print calc4(cols,samples,format,"Theta = 0.03",5,0.03)
+	print calc5(cols,samples,format,"Modal Man")
 
 if __name__ == "__main__":
-    main()
+	main()
