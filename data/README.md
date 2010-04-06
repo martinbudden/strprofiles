@@ -7,16 +7,17 @@ There are two sets of data in this directory.
 Data Format
 ===========
 
-Format of file is:
-First row - each cell is a SGM Marker name, cell A1 blank
-Second row - each cell is sample size and sample name (eg "302 Cau"), cell B1 ignored
-First column - (starting at cell C1) allele value (eg "11"), cell A1 blank, cell B1 is column header "Allele"
-Main table - from cell C2 onwards - allele frequency value for given Marker, Sample and allele
+Format of file is:  
+First row - each cell is a SGM Marker name, cell A1 blank  
+Second row - each cell is sample size and sample name (eg "302 Cau"), cell B1 ignored  
+First column - (starting at cell C1) allele value (eg "11"), cell A1 blank, cell B1 is column header "Allele"  
+Main table - from cell C2 onwards - allele frequency value for given Marker, Sample and allele  
 
-        , "CSF1PO",  "CSF1PO", "CSF1PO",  "FGA",     "FGA",    "FGA",...
-"Allele", "302 Cau", "258 AA", "140 His", "302 Cau", "258 AA", "140 His",...
-7,                 ,  0.05253,   0.02143,...
-...
+            , "CSF1PO",  "CSF1PO", "CSF1PO",  "FGA",     "FGA",    "FGA",...
+    "Allele", "302 Cau", "258 AA", "140 His", "302 Cau", "258 AA", "140 His",...
+    7,                 ,  0.05253,   0.02143,É
+    ...
+
 
 NIST Data
 =========
