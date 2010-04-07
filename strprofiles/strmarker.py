@@ -99,10 +99,8 @@ def get_modal_profile(data,name):
 			p = items[0][1]
 			q = items[1][1]
 			if p*p > 2*p*q:
-				print 'same',p
 				profile[d['marker']]  = ((items[0][0],p),(items[0][0],p))
 			else:
-				print 'different',p,q
 				profile[d['marker']]  = ((items[0][0],p),(items[1][0],q))
 	return profile
 

@@ -1,5 +1,5 @@
 """
-Example test module.
+strmarker test module.
 """
 
 import unittest
@@ -56,7 +56,6 @@ class exampleTestCase(unittest.TestCase):
 	expected = {'FGA':(('21',0.1775),('22',0.165)), 'TH01':(('9.3',0.35),('6',0.2525)),'D16S539':(('12',0.3425),('11',0.2975)),'VWA':(('5',0.94),('5',0.94))}
 	profile = expected
 	result = strmarker.get_modal_profile(data,'AB')
-	print result
 	for i in expected:
 		self.assertEqual(result[i][0][0],expected[i][0][0])
 		self.assertEqual(result[i][1][0],expected[i][1][0])
@@ -77,8 +76,9 @@ class exampleTestCase(unittest.TestCase):
 
 	# constructed frequencies (n=100)
 	alleles = {'a':0.01,'b':0.02,'c':0.03,'d':0.04,'e':0.05,'f':0.15,'g':0.30,'h':0.40}
+	expected = alleles
 	result = strmarker.pool_alleles(alleles,0,100)
-	for i in result:
+	for i in expected:
 		self.assertAlmostEqual(result[i],alleles[i])
 	expected = {'other':0.10,'e':0.05,'f':0.15,'g':0.30,'h':0.40}
 	result = strmarker.pool_alleles(alleles,5,100)
@@ -105,4 +105,4 @@ class exampleTestCase(unittest.TestCase):
 
 
 if __name__ == "__main__":
-		unittest.main()
+	unittest.main()

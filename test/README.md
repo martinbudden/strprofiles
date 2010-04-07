@@ -1,5 +1,5 @@
-Example Test Suite
-==================
+strprofiles Test Suite
+======================
 
 This directory contains the test suite.
 
