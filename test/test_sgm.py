@@ -50,19 +50,22 @@ class exampleTestCase(unittest.TestCase):
 
     def testGetModalProfile(self):
         """get modal profile"""
-	cols = [{'name':'AB','marker':'FGA','alleles':self.AB_Cau_FGA_alleles},{'name':'AB','marker':'TH01','alleles':self.AB_Cau_TH01_alleles}, \
-		{'name':'AB','marker':'DS16S539','alleles':self.AB_Cau_D16S539_alleles}]
-	expected = {'FGA':(('21',0.1775),('22',0.165)), 'TH01':(('9.3',0.35),('6',0.2525)),' DS16S539':(('12',0.3425),('11',0.2975))}
+	item = {'name':'AB','marker':'VWA','alleles':{'5':0.94,'6':0.03,'7':0.02,'8':0.01}}
+	data = [{'name':'AB','marker':'FGA','alleles':self.AB_Cau_FGA_alleles},{'name':'AB','marker':'TH01','alleles':self.AB_Cau_TH01_alleles}, \
+		{'name':'AB','marker':'D16S539','alleles':self.AB_Cau_D16S539_alleles},item]
+	expected = {'FGA':(('21',0.1775),('22',0.165)), 'TH01':(('9.3',0.35),('6',0.2525)),'D16S539':(('12',0.3425),('11',0.2975)),'VWA':(('5',0.94),('5',0.94))}
 	profile = expected
-	result = strmarker.get_modal_profile(cols,'AB')
-	for i in result:
+	result = strmarker.get_modal_profile(data,'AB')
+	print result
+	for i in expected:
 		self.assertEqual(result[i][0][0],expected[i][0][0])
 		self.assertEqual(result[i][1][0],expected[i][1][0])
 		self.assertAlmostEqual(result[i][0][1],expected[i][0][1])
 		self.assertAlmostEqual(result[i][1][1],expected[i][1][1])
-	expected = 0.01035313125
-	result = strmarker.calc_profile_match_probability(result,0.0)
-	self.assertEqual(result,expected)
+	expected = 2*0.1775*0.165 * 2*0.35*0.2525 * 2*0.3425*0.2975 * 0.94*0.94
+	result = strmarker.calc_profile_match_probability(profile,0.0)
+	self.assertAlmostEqual(result,expected)
+
 
     def testPoolAlleles(self):
         """pool alleles"""
@@ -79,7 +82,7 @@ class exampleTestCase(unittest.TestCase):
 		self.assertAlmostEqual(result[i],alleles[i])
 	expected = {'other':0.10,'e':0.05,'f':0.15,'g':0.30,'h':0.40}
 	result = strmarker.pool_alleles(alleles,5,100)
-	for i in result:
+	for i in expected:
 		self.assertAlmostEqual(result[i],expected[i])
 
 	# AB Cau D16S539 counts (n=200)
@@ -90,12 +93,13 @@ class exampleTestCase(unittest.TestCase):
 
 	# AB Cau D16S539 frequencies (n=200)
 	alleles = self.AB_Cau_D16S539_alleles
+	expected = alleles
 	result = strmarker.pool_alleles(alleles,0,200)
-	for i in result:
-		self.assertAlmostEqual(result[i],alleles[i])
+	for i in expected:
+		self.assertAlmostEqual(result[i],expected[i])
 	expected = self.fromPercentages({'9':10.75,'10':4.25,'11':29.75,'12':34.25,'13':17.5,'14':1.75,'other':1.75})
 	result = strmarker.pool_alleles(alleles,5,200*2)
-	for i in result:
+	for i in expected:
 		self.assertAlmostEqual(result[i],expected[i])
 
 

@@ -1,12 +1,13 @@
 """
 strmarker
+
+Utilities for STR (short tandem repeat) genetic markers and allele frequency data.
 """
 
 from operator import itemgetter
 
 
 SGM_PLUS_MARKERS = ['FGA','TH01','VWA','D2S1338','D3S1358','D8S1179','D16S539','D18S51','D19S433','D21S11']
-#SGM_PLUS_MARKERS = ['TH01','D16S539']
 
 def calc_marker_rmp(alleles,theta):
 	"""
@@ -17,7 +18,6 @@ def calc_marker_rmp(alleles,theta):
 	theta -- the population subdivision coefficient, used to correct for subdivided populations
 
 	"""
-
 	rmp = 0.0;
 	denom = (1+theta)*(1+2*theta)
 	for i in alleles:
@@ -41,7 +41,6 @@ def pool_alleles(alleles,cutoff,count):
 	count -- the size of the sample from which the frequencies were derived
 
 	"""
-
 	items = alleles.items()
 	items.sort(key = itemgetter(1))
 	limit = float(cutoff)
@@ -59,51 +58,69 @@ def pool_alleles(alleles,cutoff,count):
 	return ret
 
 
-def calc_rmps(cols,name,cutoff,theta):
+def calc_rmps(data,name,cutoff,theta):
+	"""
+	Calculate the random match probabilities for each genetic marker for the named sample set
+
+	Keyword arguments:
+	data -- the allele frequency data
+	name -- the name of the sample set to be used
+	cutoff -- the minimum size of a frequency bin, items with a frequency lower than this will be pooled
+	theta -- the population subdivision coefficient, used to correct for subdivided populations
+
+	"""
 	ret = {}
 	rmp = 1.0
-	col = {}
-	for c in cols:
-		#print c
-		if c['name']==name and c['marker'] in SGM_PLUS_MARKERS:
-			#print c['name'],c['marker'],c['count']
-			count = c['count']
+	for d in data:
+		if d['name']==name and d['marker'] in SGM_PLUS_MARKERS:
+			count = d['count']
 			# note, count doubled since two allele values per person in sample
-			alleles = pool_alleles(c['alleles'],cutoff,2*count)
+			alleles = pool_alleles(d['alleles'],cutoff,2*count)
 			p = calc_marker_rmp(alleles,theta)
+			ret[d['marker']] = p
 			rmp *= p
-			#print c['name'],c['marker'],round(p,4)
-			ret[c['marker']] = p
 	ret['count'] = count
 	ret['combined'] = rmp
 	ret['reciprocal'] = 1.0/rmp
 	return ret
 
 
-def get_modal_profile(cols,name):
+def get_modal_profile(data,name):
+	"""
+	Find the modal profile for in the named sample set.
+
+	"""
 	profile = {}
-	for c in cols:
-		if c['name']==name and c['marker'] in SGM_PLUS_MARKERS:
-			items = c['alleles'].items()
+	for d in data:
+		if d['name']==name and d['marker'] in SGM_PLUS_MARKERS:
+			items = d['alleles'].items()
 			items.sort(key = itemgetter(1))
 			items.reverse()
 			p = items[0][1]
 			q = items[1][1]
 			if p*p > 2*p*q:
-				profile[c['marker']]  = ((items[0][0],p),(items[0][0],p))
+				print 'same',p
+				profile[d['marker']]  = ((items[0][0],p),(items[0][0],p))
 			else:
-				profile[c['marker']]  = ((items[0][0],p),(items[1][0],q))
+				print 'different',p,q
+				profile[d['marker']]  = ((items[0][0],p),(items[1][0],q))
 	return profile
 
 
 def calc_profile_match_probability(profile,theta):
+	"""
+	Calculate the probability that a random individual matches the given profile
+
+	Keyword arguments:
+	profile -- a 2D dict of the data to be formatted
+	theta -- the population subdivision coefficient, used to correct for subdivided populations
+
+	"""
 	pmp = 1.0
 	for marker in profile:
 		m = profile[marker]
 		p = m[0][1]
 		q = m[1][1]
-		#print m
-		#mp *= 2*p*q
 		denom = (1+theta)*(1+2*theta)
 		if m[0][0] == m[1][0]:
 			mp = (2*theta+(1-theta)*p)*(3*theta+(1-theta)*p)/denom

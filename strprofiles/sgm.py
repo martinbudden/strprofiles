@@ -32,36 +32,39 @@ def read_csv(filename,prefix,normalizer):
 	,"CSF1PO","CSF1PO","CSF1PO","FGA","FGA","FGA",...
 	"Allele","302 Cau","258 AA","140 His","302 Cau","258 AA","140 His",...
 	7,,0.05253,0.02143,,,,...
+
 	"""
-
-	cols = []
-
+	data = []
 	reader = csv.reader(open(filename, "rb"),'excel')
 
-	# read in the first row which contains the
+	# read in the first row, which contains the SMG Marker names
 	row = reader.next()
 	for i in range(1,len(row)-1):
-		cols.append({'marker':row[i],'alleles':{}})
+		data.append({'marker':row[i],'alleles':{}})
+
+	# read in the second row, which contains the sample names
 	row = reader.next()
 	for i in range(1,len(row)-1):
 		vals = string.split(row[i])
 		if len(vals) == 1:
-			cols[i-1]['name'] = prefix + vals[0]
+			data[i-1]['name'] = prefix + vals[0]
 		else:
-			cols[i-1]['count'] = int(vals[0])
-			cols[i-1]['name'] = prefix + vals[1]
+			data[i-1]['count'] = int(vals[0])
+			data[i-1]['name'] = prefix + vals[1]
+
+	# read in the allele frequencies
 	try:
 		while 1:
 			row = reader.next()
 			for i in range(1,len(row)-1):
 				if row[i] != '':
-					cols[i-1]['alleles'][row[0]] = float(row[i])/normalizer
+					data[i-1]['alleles'][row[0]] = float(row[i])/normalizer
 	except StopIteration:
 		pass
-	return cols
+	return data
 
 
-def textTable(data,caption,rowheaders,colheaders):
+def textRmpTable(data,caption,rowheaders,colheaders):
 	"""
 	Format data into a text table formatted using whitespace
 
@@ -74,31 +77,31 @@ def textTable(data,caption,rowheaders,colheaders):
 	"""
 	t = Template('\n{{caption}}\n'
 		'{{"%8s"|format("")}} '
-		'{% for top in tops %}'
-			'{{"%8s"|format(top)}} '
+		'{% for colheader in colheaders %}'
+			'{{"%8s"|format(colheader)}} '
 		'{% endfor %}\n'
 		'{{"%8s"|format("Count")}} '
-		'{% for top in tops %}'
-			'{{"%8d"|format(data[top]["count"])|escape}} '
+		'{% for colheader in colheaders %}'
+			'{{"%8d"|format(data[colheader]["count"])|escape}} '
 		'{% endfor %}\n'
-		'{% for left in lefts %}'
-			'{{"%8s"|format(left)}} '
-			'{% for top in tops %}'
-				'{{"   %1.3f"|format(data[top][left])|escape}} '
+		'{% for rowheader in rowheaders %}'
+			'{{"%8s"|format(rowheader)}} '
+			'{% for colheader in colheaders %}'
+				'{{"   %1.3f"|format(data[colheader][rowheader])|escape}} '
 			'{% endfor %}\n'
 		'{% endfor %}'
 		'{{"%8s"|format("Combined")}} '
-		'{% for top in tops %}'
-			'{{"%1.2e"|format(data[top]["combined"])|escape}} '
+		'{% for colheader in colheaders %}'
+			'{{"%1.2e"|format(data[colheader]["combined"])|escape}} '
 		'{% endfor %}\n'
 		'{{"%8s"|format("Recip")}} '
-		'{% for top in tops %}'
-			'{{"%1.2e"|format(data[top]["reciprocal"])|escape}} '
+		'{% for colheader in colheaders %}'
+			'{{"%1.2e"|format(data[colheader]["reciprocal"])|escape}} '
 		'{% endfor %}')
-	return t.render(data=data, caption=caption, lefts=rowheaders, tops=colheaders)
+	return t.render(data=data, caption=caption, rowheaders=rowheaders, colheaders=colheaders)
 
 
-def textTable2(data,caption,rowheaders,colheaders):
+def textPmpTable(data,caption,rowheaders,colheaders):
 	"""
 	Format data into a text table formatted using whitespace
 
@@ -111,19 +114,19 @@ def textTable2(data,caption,rowheaders,colheaders):
 	"""
 	t = Template('\n{{caption}}\n'
 		'{{"%8s"|format("")}} '
-		'{% for top in tops %}'
-			'{{"%8s"|format(top)}} '
+		'{% for colheader in colheaders %}'
+			'{{"%8s"|format(colheader)}} '
 		'{% endfor %}\n'
-		'{% for left in lefts %}'
-			'{{"%8s"|format(left)}} '
-			'{% for top in tops %}'
-				'{{"%1.2e"|format(data[top][left])|escape}} '
+		'{% for rowheader in rowheaders %}'
+			'{{"%8s"|format(rowheader)}} '
+			'{% for colheader in colheaders %}'
+				'{{"%1.2e"|format(data[colheader][rowheader])|escape}} '
 			'{% endfor %}\n'
 		'{% endfor %}')
-	return t.render(data=data, caption=caption, lefts=rowheaders, tops=colheaders)
+	return t.render(data=data, caption=caption, rowheaders=rowheaders, colheaders=colheaders)
 
 
-def htmlTable(data,caption,rowheaders,colheaders):
+def htmlRmpTable(data,caption,rowheaders,colheaders):
 	"""
 	Format data into an HTML table
 
@@ -139,46 +142,46 @@ def htmlTable(data,caption,rowheaders,colheaders):
 		'<thead>\n'
 		'<tr> '
 		'<th></th> '
-		'{% for top in tops %}'
-			'<th>{{top|replace(" ", "<br />")}}</th> '
+		'{% for colheader in colheaders %}'
+			'<th>{{colheader|replace(" ", "<br />")}}</th> '
 		'{% endfor %}'
 		'</tr>\n'
 		'<tr> '
 		'<th>Count</th> '
-		'{% for top in tops %}'
-			'<th>{{data[top]["count"]|escape}}</th> '
+		'{% for colheader in colheaders %}'
+			'<th>{{data[colheader]["count"]|escape}}</th> '
 		'{% endfor %}\n'
 		'</tr>\n'
 		'</thead>\n'
 		'<tbody>\n'
-		'{% for left in lefts %}'
+		'{% for rowheader in rowheaders %}'
 			'<tr> '
-			'<th>{{left}}</th> '
-			'{% for top in tops %}'
-				'<td>{{" %1.3f"|format(data[top][left])|escape}}</td> '
+			'<th>{{rowheader}}</th> '
+			'{% for colheader in colheaders %}'
+				'<td>{{" %1.3f"|format(data[colheader][rowheader])|escape}}</td> '
 			'{% endfor %}'
 			'</tr>\n'
 		'{% endfor %}'
 		'</tbody>\n'
 		'<tr> '
 		'<th>Combined</th> '
-		'{% for top in tops %}'
-			'<td>{{"%1.2e"|format(data[top]["combined"])|escape}}</td> '
+		'{% for colheader in colheaders %}'
+			'<td>{{"%1.2e"|format(data[colheader]["combined"])|escape}}</td> '
 		'{% endfor %}'
 		'</tr>\n'
 		'<tr> '
 		'<th>Reciprocal</th> '
-		'{% for top in tops %}'
-			'<td>{{"%1.2e"|format(data[top]["reciprocal"])|escape}}</td> '
+		'{% for colheader in colheaders %}'
+			'<td>{{"%1.2e"|format(data[colheader]["reciprocal"])|escape}}</td> '
 		'{% endfor %}'
 		'</tr>\n'
 		'<tfoot>\n'
 		'</tfoot>\n'
 		'</table>\n</html>\n')
-	return t.render(data=data, caption=caption, lefts=rowheaders, tops=colheaders)
+	return t.render(data=data, caption=caption, rowheaders=rowheaders, colheaders=colheaders)
 
 
-def htmlTable2(data,caption,rowheaders,colheaders):
+def htmlPmpTable(data,caption,rowheaders,colheaders):
 	"""
 	Format data into an HTML table
 
@@ -194,56 +197,66 @@ def htmlTable2(data,caption,rowheaders,colheaders):
 		'<thead>\n'
 		'<tr> '
 		'<th></th> '
-		'{% for top in tops %}'
-			'<th>{{top|replace(" ", "<br />")}}</th> '
+		'{% for colheader in colheaders %}'
+			'<th>{{colheader|replace(" ", "<br />")}}</th> '
 		'{% endfor %}'
 		'</tr>\n'
 		'</thead>\n'
 		'<tbody>\n'
-		'{% for left in lefts %}'
+		'{% for rowheader in rowheaders %}'
 			'<tr> '
-			'<th>{{left}}</th> '
-			'{% for top in tops %}'
-				'<td>{{"%1.2e"|format(data[top][left])|escape}}</td> '
+			'<th>{{rowheader}}</th> '
+			'{% for colheader in colheaders %}'
+				'<td>{{"%1.2e"|format(data[colheader][rowheader])|escape}}</td> '
 			'{% endfor %}'
 			'</tr>\n'
 		'{% endfor %}'
 		'</tbody>\n'
 		'</table>\n</html>\n')
-	return t.render(data=data, caption=caption, lefts=rowheaders, tops=colheaders)
+	return t.render(data=data, caption=caption, rowheaders=rowheaders, colheaders=colheaders)
 
 
-def calc_rmps(cols,samples,format,caption,cutoff,theta):
-	d = defaultdict(dict)
+def calc_rmps(data,samples,format,caption,cutoff,theta):
+	"""
+	Calculate the random match probabilities and format them into a table
+	"""
+	table = defaultdict(dict)
 	columnHeaders = []
 	for sample in samples:
 		columnHeaders.append(sample)
-		d[sample] = strmarker.calc_rmps(cols,sample,cutoff,theta)
-	#"302 Cau","258 AA","140 His",
-	#tops = ['AB AA','AB Cau','AB Combined','JSP AA','JSP Cau','JSP His','JSP Combined']
-	#columnHeaders = ['AB AA','AB Cau','JSF AA','JSF Cau','JSF His']
+		table[sample] = strmarker.calc_rmps(data,sample,cutoff,theta)
 	if format == "html":
-		return htmlTable(d,caption,strmarker.SGM_PLUS_MARKERS,columnHeaders)
+		return htmlRmpTable(table,caption,strmarker.SGM_PLUS_MARKERS,columnHeaders)
 	else:
-		return textTable(d,caption,strmarker.SGM_PLUS_MARKERS,columnHeaders)
+		return textRmpTable(table,caption,strmarker.SGM_PLUS_MARKERS,columnHeaders)
 
 
-def calc_pmps(cols,samples,format,caption):
-	d = defaultdict(dict)
+def calc_pmps(data,samples,format,caption):
+	"""
+	Calculate the profile match probabilities for the modal profile and format them into a table
+	"""
+	table = defaultdict(dict)
 	columnHeaders = []
 	for sample in samples:
 		columnHeaders.append(sample)
-		profile = strmarker.get_modal_profile(cols,sample)
-		d[sample]['0.0'] = 1.0/strmarker.calc_profile_match_probability(profile,0.0)
-		d[sample]['0.01'] = 1.0/strmarker.calc_profile_match_probability(profile,0.01)
-		d[sample]['0.03'] = 1.0/strmarker.calc_profile_match_probability(profile,0.03)
+		profile = strmarker.get_modal_profile(data,sample)
+		table[sample]['0.0'] = 1.0/strmarker.calc_profile_match_probability(profile,0.0)
+		table[sample]['0.01'] = 1.0/strmarker.calc_profile_match_probability(profile,0.01)
+		table[sample]['0.03'] = 1.0/strmarker.calc_profile_match_probability(profile,0.03)
 	if format == "html":
-		return htmlTable2(d,caption,['0.0','0.01','0.03'],columnHeaders)
+		return htmlPmpTable(table,caption,['0.0','0.01','0.03'],columnHeaders)
 	else:
-		return textTable2(d,caption,['0.0','0.01','0.03'],columnHeaders)
+		return textPmpTable(table,caption,['0.0','0.01','0.03'],columnHeaders)
 
 
 def main():
+	"""
+	Read in the allele frequency data
+	Print out tables of random match probabilities.
+	Print out the table of profile match probabilities for the modal profile.
+
+	"""
+
 	parser = OptionParser()
 	parser.add_option("-t", action="store_true", dest="text_format", default=False, help="use text format tables")
  	parser.add_option("-v", action="store_true", dest="verbose", default=False, help="print status messages to stdout")
@@ -254,19 +267,20 @@ def main():
 		format = "html"
 
 	# read in the NIST/JSF allele frequency data
-	colsJFS = read_csv("../data/JFS2003IDresults.csv","JSF ",1)
+	dataJFS = read_csv("../data/JFS2003IDresults.csv","JSF ",1)
 
 	# read in the NIST/JSF allele frequency data
-	colsAB = read_csv("../data/ABresults.csv","AB ",100)
-	cols = colsJFS + colsAB
+	dataAB = read_csv("../data/ABresults.csv","AB ",100)
+	data = dataJFS + dataAB
 
 	samples = ['JSF AA','JSF Cau','JSF His','AB AA','AB Cau']
 
-	print calc_rmps(cols,samples,format,"Raw Probability of Identity values",0,0.0)
-	print calc_rmps(cols,samples,format,"Rare alleles pooled",5,0.0)
-	print calc_rmps(cols,samples,format,"Theta = 0.01",5,0.01)
-	print calc_rmps(cols,samples,format,"Theta = 0.03",5,0.03)
-	print calc_pmps(cols,samples,format,"Modal Man")
+	print calc_rmps(data,samples,format,"Raw Probability of Identity values",0,0.0)
+	print calc_rmps(data,samples,format,"Rare alleles pooled",5,0.0)
+	print calc_rmps(data,samples,format,"Theta = 0.01",5,0.01)
+	print calc_rmps(data,samples,format,"Theta = 0.03",5,0.03)
+	print calc_pmps(data,samples,format,"Modal Man")
+
 
 if __name__ == "__main__":
 	main()
