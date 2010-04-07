@@ -51,7 +51,8 @@ class exampleTestCase(unittest.TestCase):
     def testGetModalProfile(self):
         """get modal profile"""
 	item = {'name':'AB','marker':'VWA','alleles':{'5':0.94,'6':0.03,'7':0.02,'8':0.01}}
-	data = [{'name':'AB','marker':'FGA','alleles':self.AB_Cau_FGA_alleles},{'name':'AB','marker':'TH01','alleles':self.AB_Cau_TH01_alleles}, \
+	data = [{'name':'AB','marker':'FGA','alleles':self.AB_Cau_FGA_alleles}, \
+		{'name':'AB','marker':'TH01','alleles':self.AB_Cau_TH01_alleles}, \
 		{'name':'AB','marker':'D16S539','alleles':self.AB_Cau_D16S539_alleles},item]
 	expected = {'FGA':(('21',0.1775),('22',0.165)), 'TH01':(('9.3',0.35),('6',0.2525)),'D16S539':(('12',0.3425),('11',0.2975)),'VWA':(('5',0.94),('5',0.94))}
 	profile = expected
@@ -64,6 +65,66 @@ class exampleTestCase(unittest.TestCase):
 	expected = 2*0.1775*0.165 * 2*0.35*0.2525 * 2*0.3425*0.2975 * 0.94*0.94
 	result = strmarker.calc_profile_match_probability(profile,0.0)
 	self.assertAlmostEqual(result,expected)
+
+
+    def testTheta(self):
+        """test theta"""
+	"""
+	data = [{'name':'FG','marker':'D3S1358','alleles':{'15':113,'17':89}}, \
+		{'name':'FG','marker':'VWA','alleles':{'14':34,'17':100}}, \
+		{'name':'FG','marker':'D16S539','alleles':{'11':119,'13':70}}, \
+		{'name':'FG','marker':'D2S1338','alleles':{'24':40,'25':48}}, \
+		{'name':'FG','marker':'D8S1179','alleles':{'11':25,'13':139}}, \
+
+		{'name':'FG','marker':'D21S11','alleles':{'30':105,'31.2':42}}, \
+		{'name':'FG','marker':'D18S51','alleles':{'14':67,'15':57}}, \
+		{'name':'FG','marker':'D19S433','alleles':{'14':131,'15.2':10}}, \
+		{'name':'FG','marker':'TH01','alleles':{'9':55,'9.3':140}}, \
+		{'name':'FG','marker':'FGA','alleles':{'21':71,'0':0}}]
+	"""
+	profile_base = {'D3S1358':(('15',113),('17',89)), \
+		'VWA':(('14',34),('17',100)), \
+		'D16S539':(('11',119),('13',70)), \
+		'D2S1338':(('24',40),('25',48)), \
+		'D8S1179':(('11',25),('13',139)), \
+		'D21S11':(('30',105),('31.2',42)), \
+		'D18S51':(('14',67),('15',57)), \
+		'D19S433':(('14',131),('15.2',10)), \
+		'TH01':(('9',55),('9.3',140)), \
+		'FGA':(('21',71),('21', 71))}
+
+	profile = {}
+	for i in profile_base:
+		p = profile_base[i]
+		profile[i] = ((p[0][0],float(p[0][1])/400),(p[1][0],float(p[1][1])/400))
+
+	result = strmarker.calc_profile_match_probability(profile,0.0)
+	expected = 7.58e-14
+	#print "result",result,expected
+	self.assertAlmostEqual(result*1e8,expected*1e8)
+
+	result = strmarker.calc_profile_match_probability(profile,0.01)
+	expected = 2.44e-13
+	#print "result 0.01",result,expected
+	self.assertAlmostEqual(result*1e7,expected*1e7)
+
+	result = strmarker.calc_profile_match_probability(profile,0.03)
+	expected = 1.614e-12
+	#print "result 0.03",result,expected
+	self.assertAlmostEqual(result*1e7,expected*1e7)
+
+	# size bias correction
+	for i in profile_base:
+		p = profile_base[i]
+		if p[0][1] == p[1][1]:
+			profile[i] = ((p[0][0],float(p[0][1]+4)/404),(p[1][0],float(p[1][1]+4)/404))
+		else:
+			profile[i] = ((p[0][0],float(p[0][1]+2)/404),(p[1][0],float(p[1][1]+2)/404))
+
+	result = strmarker.calc_profile_match_probability(profile,0.0)
+	expected = 1.4225e-13
+	#print "result 0.0",result,expected
+	self.assertAlmostEqual(result*1e10,expected*1e10)
 
 
     def testPoolAlleles(self):
