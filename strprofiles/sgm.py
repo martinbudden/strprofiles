@@ -64,7 +64,7 @@ def read_csv(filename,prefix,normalizer):
 	return data
 
 
-def textRmpTable(data,caption,rowheaders,colheaders):
+def rmp_table_text(data,caption,rowheaders,colheaders):
 	"""
 	Format data into a text table formatted using whitespace
 
@@ -101,7 +101,42 @@ def textRmpTable(data,caption,rowheaders,colheaders):
 	return t.render(data=data, caption=caption, rowheaders=rowheaders, colheaders=colheaders)
 
 
-def textPmpTable(data,caption,rowheaders,colheaders):
+def pmp_table_html(data,caption,rowheaders,colheaders):
+	"""
+	Format data into an HTML table
+
+	Keyword arguments:
+	data -- a 2D dict of the data to be formatted
+	caption -- the table's caption
+	rowheaders -- the table's row headings
+	colheaders -- the table's column headings
+
+	"""
+	t = Template('<html>\n<table>\n'
+		'<caption>{{caption}}</caption>\n'
+		'<thead>\n'
+		'<tr> '
+		'<th></th> '
+		'{% for colheader in colheaders %}'
+			'<th>{{colheader|replace(" ", "<br />")}}</th> '
+		'{% endfor %}'
+		'</tr>\n'
+		'</thead>\n'
+		'<tbody>\n'
+		'{% for rowheader in rowheaders %}'
+			'<tr> '
+			'<th>{{rowheader}}</th> '
+			'{% for colheader in colheaders %}'
+				'<td>{{"%1.2e"|format(data[colheader][rowheader])|escape}}</td> '
+			'{% endfor %}'
+			'</tr>\n'
+		'{% endfor %}'
+		'</tbody>\n'
+		'</table>\n</html>\n')
+	return t.render(data=data, caption=caption, rowheaders=rowheaders, colheaders=colheaders)
+
+
+def pmp_table_text(data,caption,rowheaders,colheaders):
 	"""
 	Format data into a text table formatted using whitespace
 
@@ -126,7 +161,7 @@ def textPmpTable(data,caption,rowheaders,colheaders):
 	return t.render(data=data, caption=caption, rowheaders=rowheaders, colheaders=colheaders)
 
 
-def htmlRmpTable(data,caption,rowheaders,colheaders):
+def rmp_table_html(data,caption,rowheaders,colheaders):
 	"""
 	Format data into an HTML table
 
@@ -181,42 +216,7 @@ def htmlRmpTable(data,caption,rowheaders,colheaders):
 	return t.render(data=data, caption=caption, rowheaders=rowheaders, colheaders=colheaders)
 
 
-def htmlPmpTable(data,caption,rowheaders,colheaders):
-	"""
-	Format data into an HTML table
-
-	Keyword arguments:
-	data -- a 2D dict of the data to be formatted
-	caption -- the table's caption
-	rowheaders -- the table's row headings
-	colheaders -- the table's column headings
-
-	"""
-	t = Template('<html>\n<table>\n'
-		'<caption>{{caption}}</caption>\n'
-		'<thead>\n'
-		'<tr> '
-		'<th></th> '
-		'{% for colheader in colheaders %}'
-			'<th>{{colheader|replace(" ", "<br />")}}</th> '
-		'{% endfor %}'
-		'</tr>\n'
-		'</thead>\n'
-		'<tbody>\n'
-		'{% for rowheader in rowheaders %}'
-			'<tr> '
-			'<th>{{rowheader}}</th> '
-			'{% for colheader in colheaders %}'
-				'<td>{{"%1.2e"|format(data[colheader][rowheader])|escape}}</td> '
-			'{% endfor %}'
-			'</tr>\n'
-		'{% endfor %}'
-		'</tbody>\n'
-		'</table>\n</html>\n')
-	return t.render(data=data, caption=caption, rowheaders=rowheaders, colheaders=colheaders)
-
-
-def calc_rmps(data,samples,format,caption,cutoff,theta):
+def tabulate_rmps(data,samples,format,caption,cutoff,theta):
 	"""
 	Calculate the random match probabilities and format them into a table
 	"""
@@ -226,12 +226,12 @@ def calc_rmps(data,samples,format,caption,cutoff,theta):
 		columnHeaders.append(sample)
 		table[sample] = strmarker.calc_rmps(data,sample,cutoff,theta)
 	if format == "html":
-		return htmlRmpTable(table,caption,strmarker.SGM_PLUS_MARKERS,columnHeaders)
+		return rmp_table_html(table,caption,strmarker.SGM_PLUS_MARKERS,columnHeaders)
 	else:
-		return textRmpTable(table,caption,strmarker.SGM_PLUS_MARKERS,columnHeaders)
+		return rmp_table_text(table,caption,strmarker.SGM_PLUS_MARKERS,columnHeaders)
 
 
-def calc_pmps(data,samples,format,caption):
+def tabulate_pmps(data,samples,format,caption):
 	"""
 	Calculate the profile match probabilities for the modal profile and format them into a table
 	"""
@@ -244,9 +244,9 @@ def calc_pmps(data,samples,format,caption):
 		table[sample]['0.01'] = 1.0/strmarker.calc_profile_match_probability(profile,0.01)
 		table[sample]['0.03'] = 1.0/strmarker.calc_profile_match_probability(profile,0.03)
 	if format == "html":
-		return htmlPmpTable(table,caption,['0.0','0.01','0.03'],columnHeaders)
+		return pmp_table_html(table,caption,['0.0','0.01','0.03'],columnHeaders)
 	else:
-		return textPmpTable(table,caption,['0.0','0.01','0.03'],columnHeaders)
+		return pmp_table_text(table,caption,['0.0','0.01','0.03'],columnHeaders)
 
 
 def main():
@@ -275,11 +275,11 @@ def main():
 
 	samples = ['JSF AA','JSF Cau','JSF His','AB AA','AB Cau']
 
-	print calc_rmps(data,samples,format,"Raw Probability of Identity values",0,0.0)
-	print calc_rmps(data,samples,format,"Rare alleles pooled",5,0.0)
-	print calc_rmps(data,samples,format,"Theta = 0.01",5,0.01)
-	print calc_rmps(data,samples,format,"Theta = 0.03",5,0.03)
-	print calc_pmps(data,samples,format,"Modal Man")
+	print tabulate_rmps(data,samples,format,"Raw Probability of Identity values",0,0.0)
+	print tabulate_rmps(data,samples,format,"Rare alleles pooled",5,0.0)
+	print tabulate_rmps(data,samples,format,"Theta = 0.01",5,0.01)
+	print tabulate_rmps(data,samples,format,"Theta = 0.03",5,0.03)
+	print tabulate_pmps(data,samples,format,"Modal Man")
 
 
 if __name__ == "__main__":
