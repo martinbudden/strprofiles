@@ -6,6 +6,7 @@ import unittest
 
 from strprofiles import strmarker
 
+
 class exampleTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -19,6 +20,7 @@ class exampleTestCase(unittest.TestCase):
 
     def tearDown(self):
         pass
+
 
     def testMarkerRandomMatchProbability(self):
         """marker random match probability"""
@@ -88,17 +90,17 @@ class exampleTestCase(unittest.TestCase):
 	result = strmarker.calc_profile_match_probability(profile,0.0)
 	expected = 7.58e-14
 	#print "result",result,expected
-	self.assertAlmostEqual(result*1e8,expected*1e8)
+	self.assertAlmostEqual(result,expected,16)
 
 	result = strmarker.calc_profile_match_probability(profile,0.01)
 	expected = 2.44e-13
 	#print "result 0.01",result,expected
-	self.assertAlmostEqual(result*1e7,expected*1e7)
+	self.assertAlmostEqual(result,expected,15)
 
 	result = strmarker.calc_profile_match_probability(profile,0.03)
 	expected = 1.614e-12
 	#print "result 0.03",result,expected
-	self.assertAlmostEqual(result*1e7,expected*1e7)
+	self.assertAlmostEqual(result,expected,14)
 
 	# size bias correction
 	for i in profile_base:
@@ -111,36 +113,11 @@ class exampleTestCase(unittest.TestCase):
 	result = strmarker.calc_profile_match_probability(profile,0.0)
 	expected = 1.4225e-13
 	#print "result 0.0",result,expected
-	self.assertAlmostEqual(result*1e10,expected*1e10)
+	self.assertAlmostEqual(result,expected,17)
 
-
-    def testX(self):
-        """test RMPs"""
-	data = [{'name':'FG','count':400,'marker':'D3S1358','alleles':{'15':113,'17':89}}, \
-		{'name':'FG','count':400,'marker':'VWA','alleles':{'14':34,'17':100}}, \
-		{'name':'FG','count':400,'marker':'D16S539','alleles':{'11':119,'13':70}}, \
-		{'name':'FG','count':400,'marker':'D2S1338','alleles':{'24':40,'25':48}}, \
-		{'name':'FG','count':400,'marker':'D8S1179','alleles':{'11':25,'13':139}}, \
-
-		{'name':'FG','count':400,'marker':'D21S11','alleles':{'30':105,'31.2':42}}, \
-		{'name':'FG','count':400,'marker':'D18S51','alleles':{'14':67,'15':57}}, \
-		{'name':'FG','count':400,'marker':'D19S433','alleles':{'14':131,'15.2':10}}, \
-		{'name':'FG','count':400,'marker':'TH01','alleles':{'9':55,'9.3':140}}, \
-		{'name':'FG','count':400,'marker':'FGA','alleles':{'21':71}}]
-	# size bias correction
-	for d in data:
-		d['count'] += 4
-		count = d['count']
-		for j in d['alleles']:
-			if len(d['alleles']) == 1:
-				d['alleles'][j] = float(d['alleles'][j]+4)/count
-			else:
-				d['alleles'][j] = float(d['alleles'][j]+2)/count
-	expected = {'D3S1358':0.1282,'VWA':0.0450,'D16S539':0.1068,'D2S1338':0.0257,'D8S1179':0.0466, \
-			'D21S11':0.0577,'D18S51':0.0499,'D19S433':0.0196,'TH01':0.0992,'FGA':0.0345}
-	#print data
 
     def testRMPs(self):
+        """test RMPs"""
 	data = [{'name':'AB','count':400,'marker':'FGA','alleles':self.AB_Cau_FGA_alleles}, \
 		{'name':'AB','count':400,'marker':'TH01','alleles':self.AB_Cau_TH01_alleles}, \
 		{'name':'AB','count':400,'marker':'D16S539','alleles':self.AB_Cau_D16S539_alleles}]
@@ -150,8 +127,9 @@ class exampleTestCase(unittest.TestCase):
 		print i
 		self.assertAlmostEqual(result[i],expected[i],3)
 
+
     def testPoolAlleles(self):
-        """pool alleles"""
+        """test pool alleles"""
 	# constructed counts (n=100)
 	alleles = {'a':1,'b':2,'c':3,'d':4,'e':5,'f':15,'g':30,'h':40}
 	self.assertEqual(strmarker.pool_alleles(alleles,0,0),alleles)
@@ -185,7 +163,6 @@ class exampleTestCase(unittest.TestCase):
 	result = strmarker.pool_alleles(alleles,5,200*2)
 	for i in expected:
 		self.assertAlmostEqual(result[i],expected[i])
-
 
 
 if __name__ == "__main__":

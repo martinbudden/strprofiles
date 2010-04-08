@@ -125,6 +125,7 @@ def calc_profile_match_probability(profile,theta):
 		else:
 			mp = 2*(theta+(1-theta)*p)*(theta+(1-theta)*q)/denom
 		pmp *= mp
+		#print marker,round(mp,4)
 	return pmp
 
 

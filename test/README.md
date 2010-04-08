@@ -3,7 +3,7 @@ strprofiles Test Suite
 
 This directory contains the test suite.
 
-The tests may be run with py.test[1]. If you have py.test
+The tests may be run with [py.test](http://codespeak.net/py/dist/test/index.html). If you have py.test
 installed, from the example base directory simply type
 
     py.test
@@ -19,6 +19,3 @@ You can run the tests to the first failure:
     py.test -svx
 
 This helps quite a bit with dealing with the error output.
-
-[1] py.test is part of py lib and can be found at
-http://codespeak.net/py/dist/test.html
