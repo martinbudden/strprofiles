@@ -51,9 +51,9 @@ class exampleTestCase(unittest.TestCase):
     def testGetModalProfile(self):
         """get modal profile"""
 	item = {'name':'AB','marker':'VWA','alleles':{'5':0.94,'6':0.03,'7':0.02,'8':0.01}}
-	data = [{'name':'AB','marker':'FGA','alleles':self.AB_Cau_FGA_alleles}, \
-		{'name':'AB','marker':'TH01','alleles':self.AB_Cau_TH01_alleles}, \
-		{'name':'AB','marker':'D16S539','alleles':self.AB_Cau_D16S539_alleles},item]
+	data = [{'name':'AB','count':400,'marker':'FGA','alleles':self.AB_Cau_FGA_alleles}, \
+		{'name':'AB','count':400,'marker':'TH01','alleles':self.AB_Cau_TH01_alleles}, \
+		{'name':'AB','count':400,'marker':'D16S539','alleles':self.AB_Cau_D16S539_alleles},item]
 	expected = {'FGA':(('21',0.1775),('22',0.165)), 'TH01':(('9.3',0.35),('6',0.2525)),'D16S539':(('12',0.3425),('11',0.2975)),'VWA':(('5',0.94),('5',0.94))}
 	profile = expected
 	result = strmarker.get_modal_profile(data,'AB')
@@ -69,19 +69,6 @@ class exampleTestCase(unittest.TestCase):
 
     def testTheta(self):
         """test theta"""
-	"""
-	data = [{'name':'FG','marker':'D3S1358','alleles':{'15':113,'17':89}}, \
-		{'name':'FG','marker':'VWA','alleles':{'14':34,'17':100}}, \
-		{'name':'FG','marker':'D16S539','alleles':{'11':119,'13':70}}, \
-		{'name':'FG','marker':'D2S1338','alleles':{'24':40,'25':48}}, \
-		{'name':'FG','marker':'D8S1179','alleles':{'11':25,'13':139}}, \
-
-		{'name':'FG','marker':'D21S11','alleles':{'30':105,'31.2':42}}, \
-		{'name':'FG','marker':'D18S51','alleles':{'14':67,'15':57}}, \
-		{'name':'FG','marker':'D19S433','alleles':{'14':131,'15.2':10}}, \
-		{'name':'FG','marker':'TH01','alleles':{'9':55,'9.3':140}}, \
-		{'name':'FG','marker':'FGA','alleles':{'21':71,'0':0}}]
-	"""
 	profile_base = {'D3S1358':(('15',113),('17',89)), \
 		'VWA':(('14',34),('17',100)), \
 		'D16S539':(('11',119),('13',70)), \
@@ -126,6 +113,42 @@ class exampleTestCase(unittest.TestCase):
 	#print "result 0.0",result,expected
 	self.assertAlmostEqual(result*1e10,expected*1e10)
 
+
+    def testX(self):
+        """test RMPs"""
+	data = [{'name':'FG','count':400,'marker':'D3S1358','alleles':{'15':113,'17':89}}, \
+		{'name':'FG','count':400,'marker':'VWA','alleles':{'14':34,'17':100}}, \
+		{'name':'FG','count':400,'marker':'D16S539','alleles':{'11':119,'13':70}}, \
+		{'name':'FG','count':400,'marker':'D2S1338','alleles':{'24':40,'25':48}}, \
+		{'name':'FG','count':400,'marker':'D8S1179','alleles':{'11':25,'13':139}}, \
+
+		{'name':'FG','count':400,'marker':'D21S11','alleles':{'30':105,'31.2':42}}, \
+		{'name':'FG','count':400,'marker':'D18S51','alleles':{'14':67,'15':57}}, \
+		{'name':'FG','count':400,'marker':'D19S433','alleles':{'14':131,'15.2':10}}, \
+		{'name':'FG','count':400,'marker':'TH01','alleles':{'9':55,'9.3':140}}, \
+		{'name':'FG','count':400,'marker':'FGA','alleles':{'21':71}}]
+	# size bias correction
+	for d in data:
+		d['count'] += 4
+		count = d['count']
+		for j in d['alleles']:
+			if len(d['alleles']) == 1:
+				d['alleles'][j] = float(d['alleles'][j]+4)/count
+			else:
+				d['alleles'][j] = float(d['alleles'][j]+2)/count
+	expected = {'D3S1358':0.1282,'VWA':0.0450,'D16S539':0.1068,'D2S1338':0.0257,'D8S1179':0.0466, \
+			'D21S11':0.0577,'D18S51':0.0499,'D19S433':0.0196,'TH01':0.0992,'FGA':0.0345}
+	#print data
+
+    def testRMPs(self):
+	data = [{'name':'AB','count':400,'marker':'FGA','alleles':self.AB_Cau_FGA_alleles}, \
+		{'name':'AB','count':400,'marker':'TH01','alleles':self.AB_Cau_TH01_alleles}, \
+		{'name':'AB','count':400,'marker':'D16S539','alleles':self.AB_Cau_D16S539_alleles}]
+	result = strmarker.calc_rmps(data,'AB',0,0.0)
+	expected = {'FGA':0.036,'TH01':0.094,'D16S539':0.103}
+	for i in expected:
+		print i
+		self.assertAlmostEqual(result[i],expected[i],3)
 
     def testPoolAlleles(self):
         """pool alleles"""
