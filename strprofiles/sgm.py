@@ -6,6 +6,7 @@
 sgm
 """
 
+#import strprofiles.strmarker as strmarker
 import strmarker
 import csv
 from jinja2 import Template
